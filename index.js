@@ -1,6 +1,9 @@
 const express = require('express');
 const app = express();
 var morgan = require('morgan');
+const cors = require('cors');
+
+app.use(cors());
 
 app.use(express.json());
 app.use(morgan('combined'))
@@ -47,6 +50,10 @@ let persons = [
         "number": "333343456"
     }
 ];
+
+app.get('/', (request, response) => {
+    response.send('<h1>welcome</h1>')
+});
 
 app.get('/api/persons', (request, response) => {
     response.json(persons)
@@ -98,7 +105,7 @@ const generateId = () => {
     return Math.floor(Math.random() * 10000000);
 };
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 });
