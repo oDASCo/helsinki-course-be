@@ -67,6 +67,13 @@ app.get('/api/info', (request, response) => {
 `);
 });
 
+app.delete('/api/persons/:id', (request, response) => {
+    const id = Number(request.params.id);
+    persons = persons.filter(person => person.id !== id);
+
+    response.status(204).end();
+});
+
 app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id);
     const note = persons.find(person => person.id === id);
