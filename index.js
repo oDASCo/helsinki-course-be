@@ -1,39 +1,68 @@
 const express = require('express');
 const app = express();
+var morgan = require('morgan');
 
 app.use(express.json());
+app.use(morgan('combined'))
 
-let notes = [
+let persons = [
     {
-        id: 1,
-        content: "HTML is easy",
-        date: "2019-05-30T17:30:31.098Z",
-        important: true
+        "id": 1,
+        "name": "Daria",
+        "number": "111-90-89"
     },
     {
-        id: 2,
-        content: "Browser can execute only Javascript",
-        date: "2019-05-30T18:39:34.091Z",
-        important: false
+        "name": "Nikita",
+        "id": 2,
+        "number": "+375296776969"
     },
     {
-        id: 3,
-        content: "GET and POST are the most important methods of HTTP protocol",
-        date: "2019-05-30T19:20:14.298Z",
-        important: true
+        "name": "Natasha",
+        "id": 3,
+        "number": "34-66-5-6"
+    },
+    {
+        "name": "Sasha",
+        "id": 4,
+        "number": "233330"
+    },
+    {
+        "id": 5,
+        "name": "Alex",
+        "number": "111-90-00009"
+    },
+    {
+        "name": "Dan",
+        "id": 6,
+        "number": "3333"
+    },
+    {
+        "id": 7,
+        "name": "Ann",
+        "number": "1234"
+    },
+    {
+        "name": "Wera",
+        "id": 8,
+        "number": "333343456"
     }
 ];
-app.get('/', (request, response) => {
-    response.send('<h1>Hello World!</h1>')
+
+app.get('/api/persons', (request, response) => {
+    response.json(persons)
 });
 
-app.get('/api/notes', (request, response) => {
-    response.json(notes)
+app.get('/api/info', (request, response) => {
+    let dateOfRequest = new Date(Date.now());
+    response.send(`
+                 <h2>Phonebook has info about ${persons.length} persons</h2>
+                 <p>${dateOfRequest.toDateString()}</p>
+`);
 });
 
-app.get('/api/notes/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id);
-    const note = notes.find(note => note.id === id);
+    const note = persons.find(person => person.id === id);
     if (note) {
         response.json(note)
     } else {
@@ -41,39 +70,32 @@ app.get('/api/notes/:id', (request, response) => {
     }
 });
 
-app.delete('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id)
-    notes = notes.filter(note => note.id !== id)
-
-    response.status(204).end();
-});
-
-app.post('/api/notes', (request, response) => {
+app.post('/api/persons', (request, response) => {
     const body = request.body;
-
-    if (!body.content) {
+    if (!body || !body.name || !body.number) {
         return response.status(400).json({
             error: 'content missing'
         })
     }
 
-    const note = {
-        content: body.content,
-        important: body.important || false,
-        date: new Date(),
+    if (persons.find(item => item.name === body.name)) {
+        return response.status(400).json({
+            error: 'name must be unique'
+        })
+    }
+
+    const person = {
+        name: body.name,
+        number: body.number,
         id: generateId(),
     };
 
-    notes = notes.concat(note);
-
-    response.json(note)
+    persons = persons.concat(person);
+    response.json(person)
 });
 
 const generateId = () => {
-    const maxId = notes.length > 0
-        ? Math.max(...notes.map(n => n.id))
-        : 0;
-    return maxId + 1
+    return Math.floor(Math.random() * 10000000);
 };
 
 const PORT = 3001;
