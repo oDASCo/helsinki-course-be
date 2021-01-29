@@ -6,9 +6,7 @@ if (process.argv.length < 3) {
 }
 
 const password = process.argv[2];
-
 const newName = process.argv[3];
-
 const newNumber = process.argv[4];
 
 const url =
