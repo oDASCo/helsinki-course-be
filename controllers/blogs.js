@@ -1,5 +1,6 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({})
@@ -24,8 +25,16 @@ blogsRouter.put('/:id', async (request, response) => {
 })
 
 blogsRouter.delete('/:id', async (request, response) => {
-  const blog = await Blog.findByIdAndDelete(request.params.id)
-  response.status(200).json(blog)
+  const blogToDelete = await Blog.findById(request.params.id)
+  if (request.user.id.toString() === blogToDelete.user.id.toString()) {
+    const blog = await Blog.findByIdAndDelete(request.params.id)
+    request.user.blogs = request.user.blogs.filter(item => item.id !== request.params.id)
+    const updatedUser = await User.findByIdAndUpdate(request.decodedToken.id, request.user, { new: true })
+    await updatedUser.save()
+    response.status(200).json(blog)
+  } else {
+    return response.status(401).json({ error: 'You cannot delete this post'  })
+  }
 })
 
 blogsRouter.post('/', async (request, response) => {
@@ -36,8 +45,17 @@ blogsRouter.post('/', async (request, response) => {
     response.status(400).json('Request error')
     return
   }
-  const blog = new Blog(request.body)
+
+  const blog = new Blog({...request.body, user: {username: request.user.username, name: request.user.name, id: request.user._id}})
   const result = await blog.save()
+
+  request.user.blogs = request.user.blogs.concat({title: result.title,
+    author: result.author,
+    url: result.url,
+    id: result._id})
+  const updatedUser = await User.findByIdAndUpdate(request.decodedToken.id, request.user, { new: true })
+  await updatedUser.save()
+
   response.status(201).json(result)
 })
 
